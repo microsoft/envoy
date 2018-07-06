@@ -36,6 +36,7 @@ class OwnedImpl;
 void PrintTo(const OwnedImpl& buffer, std::ostream* os);
 } // namespace Buffer
 
+#if !defined(WIN32)
 namespace Redis {
 /**
  * Pretty print const RespValue& value
@@ -45,4 +46,5 @@ typedef std::unique_ptr<RespValue> RespValuePtr;
 void PrintTo(const RespValue& value, std::ostream* os);
 void PrintTo(const RespValuePtr& value, std::ostream* os);
 } // namespace Redis
+#endif
 } // namespace Envoy

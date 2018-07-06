@@ -48,10 +48,14 @@ public:
   MOCK_METHOD1(close, int(int));
   MOCK_METHOD3(open_, int(const std::string& full_path, int flags, int mode));
   MOCK_METHOD3(write_, ssize_t(int, const void*, size_t));
+#if !defined(WIN32)
   MOCK_METHOD3(shmOpen, int(const char*, int, mode_t));
   MOCK_METHOD1(shmUnlink, int(const char*));
+#endif
   MOCK_METHOD2(ftruncate, int(int fd, off_t length));
+#if !defined(WIN32)
   MOCK_METHOD6(mmap, void*(void* addr, size_t length, int prot, int flags, int fd, off_t offset));
+#endif
   MOCK_METHOD2(stat, int(const char* name, struct stat* stat));
 
   size_t num_writes_;

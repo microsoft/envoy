@@ -59,6 +59,7 @@ envoy::api::v2::HealthCheck createGrpcHealthCheckConfig() {
   return health_check;
 }
 
+#if !defined(WIN32)
 TEST(HealthCheckerFactoryTest, createRedis) {
   std::string json = R"EOF(
   {
@@ -79,6 +80,7 @@ TEST(HealthCheckerFactoryTest, createRedis) {
                                                       runtime, random, dispatcher)
                              .get()));
 }
+#endif
 
 // TODO(htuch): This provides coverage on MissingFieldException and missing health check type
 // handling for HealthCheck construction, but should eventually be subsumed by whatever we do for
@@ -1291,6 +1293,7 @@ TEST_F(TcpHealthCheckerImplTest, PassiveFailureCrossThreadRemoveClusterRace) {
   EXPECT_EQ(0UL, cluster_->info_->stats_store_.counter("health_check.passive_failure").value());
 }
 
+#if !defined(WIN32)
 class RedisHealthCheckerImplTest : public testing::Test, public Redis::ConnPool::ClientFactory {
 public:
   RedisHealthCheckerImplTest() : cluster_(new NiceMock<MockCluster>()) {}
@@ -1493,6 +1496,7 @@ TEST_F(RedisHealthCheckerImplTest, AllDontReuseConnection) {
   EXPECT_EQ(3UL, cluster_->info_->stats_store_.counter("health_check.failure").value());
   EXPECT_EQ(2UL, cluster_->info_->stats_store_.counter("health_check.network_failure").value());
 }
+#endif
 
 class TestGrpcHealthCheckerImpl : public GrpcHealthCheckerImpl {
 public:

@@ -122,7 +122,12 @@ TEST_P(ListenerImplTest, UseActualDst) {
 TEST_P(ListenerImplTest, WildcardListenerUseActualDst) {
   Stats::IsolatedStoreImpl stats_store;
   Event::DispatcherImpl dispatcher;
+#if defined(WIN32)
+  // On windows, 0.0.0.0 does not work for outbound connections. Hence default to loopback.
+  Network::TcpListenSocket socket(Network::Test::getCanonicalLoopbackAddress(version_), true);
+#else
   Network::TcpListenSocket socket(Network::Test::getAnyAddress(version_), true);
+#endif
   Network::MockListenerCallbacks listener_callbacks;
   Network::MockConnectionHandler connection_handler;
   // Do not redirect since use_original_dst is false.

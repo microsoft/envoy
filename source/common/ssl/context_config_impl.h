@@ -44,7 +44,8 @@ protected:
   ContextConfigImpl(const envoy::api::v2::CommonTlsContext& config);
 
   static const std::string readDataSource(const envoy::api::v2::DataSource& source,
-                                          bool allow_empty);
+                                          bool allow_empty,
+                                          std::ios_base::openmode mode = std::ios_base::in);
   static const std::string getDataSourcePath(const envoy::api::v2::DataSource& source);
 
 private:

@@ -58,8 +58,10 @@ TEST(ResponseFlagUtilsTest, toShortStringConversion) {
 TEST(UtilityTest, formatDownstreamAddressNoPort) {
   EXPECT_EQ("1.2.3.4",
             Utility::formatDownstreamAddressNoPort(Network::Address::Ipv4Instance("1.2.3.4")));
+#if !defined(WIN32)
   EXPECT_EQ("/hello",
             Utility::formatDownstreamAddressNoPort(Network::Address::PipeInstance("/hello")));
+#endif
 }
 
 } // namespace RequestInfo

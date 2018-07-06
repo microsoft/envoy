@@ -39,9 +39,11 @@ void PrintTo(const Buffer::OwnedImpl& buffer, std::ostream* os) {
 }
 } // namespace Buffer
 
+#if !defined(WIN32)
 namespace Redis {
 void PrintTo(const RespValue& value, std::ostream* os) { *os << value.toString(); }
 
 void PrintTo(const RespValuePtr& value, std::ostream* os) { *os << value->toString(); }
 } // namespace Redis
+#endif
 } // namespace Envoy

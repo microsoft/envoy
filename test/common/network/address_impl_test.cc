@@ -1,10 +1,13 @@
+#if defined(WIN32)
+typedef unsigned int sa_family_t;
+#else
 #include <arpa/inet.h>
-#include <fcntl.h>
 #include <netinet/ip.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-
+#endif
+#include <fcntl.h>
 #include <string>
 
 #include "envoy/common/exception.h"
@@ -32,11 +35,13 @@ bool addressesEqual(const InstanceConstSharedPtr& a, const Instance& b) {
   }
 }
 
+#if !defined(WIN32)
 void makeFdBlocking(int fd) {
-  const int flags = ::fcntl(fd, F_GETFL, 0);
+  const int flags = fcntl(fd, F_GETFL, 0);
   ASSERT_GE(flags, 0);
-  ASSERT_EQ(::fcntl(fd, F_SETFL, flags & (~O_NONBLOCK)), 0);
+  ASSERT_EQ(fcntl(fd, F_SETFL, flags & (~O_NONBLOCK)), 0);
 }
+#endif
 
 void testSocketBindAndConnect(Network::Address::IpVersion ip_version, bool v6only) {
   auto addr_port = Network::Utility::parseInternetAddressAndPort(
@@ -58,7 +63,12 @@ void testSocketBindAndConnect(Network::Address::IpVersion ip_version, bool v6onl
   if (addr_port->ip()->version() == IpVersion::v6) {
     int socket_v6only = 0;
     socklen_t size_int = sizeof(socket_v6only);
+#if !defined(WIN32)
     ASSERT_GE(::getsockopt(listen_fd, IPPROTO_IPV6, IPV6_V6ONLY, &socket_v6only, &size_int), 0);
+#else
+    ASSERT_GE(::getsockopt(listen_fd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&socket_v6only, &size_int),
+              0);
+#endif
     EXPECT_EQ(v6only, socket_v6only);
   }
 
@@ -77,11 +87,13 @@ void testSocketBindAndConnect(Network::Address::IpVersion ip_version, bool v6onl
     ASSERT_GE(client_fd, 0) << addr_port->asString();
     ScopedFdCloser closer2(client_fd);
 
+#if !defined(WIN32)
     // Instance::socket creates a non-blocking socket, which that extends all the way to the
     // operation of ::connect(), so connect returns with errno==EWOULDBLOCK before the tcp
     // handshake can complete. For testing convenience, re-enable blocking on the socket
     // so that connect will wait for the handshake to complete.
     makeFdBlocking(client_fd);
+#endif
 
     // Connect to the server.
     const int rc = addr_port->connect(client_fd);
@@ -280,12 +292,15 @@ TEST(Ipv6InstanceTest, BadAddress) {
   EXPECT_THROW(Ipv6Instance("bar", 1), EnvoyException);
 }
 
+// TODO-WIN: PipeInstance not compiled for Windows. Hence disabling test.
+#if !defined(WIN32)
 TEST(PipeInstanceTest, Basic) {
   PipeInstance address("/foo");
   EXPECT_EQ("/foo", address.asString());
   EXPECT_EQ(Type::Pipe, address.type());
   EXPECT_EQ(nullptr, address.ip());
 }
+#endif
 
 TEST(AddressFromSockAddr, IPv4) {
   sockaddr_storage ss;
@@ -330,6 +345,7 @@ TEST(AddressFromSockAddr, IPv6) {
             addressFromSockAddr(ss, sizeof(sockaddr_in6), true)->asString());
 }
 
+#if !defined(WIN32)
 TEST(AddressFromSockAddr, Pipe) {
   sockaddr_storage ss;
   auto& sun = reinterpret_cast<sockaddr_un&>(ss);
@@ -349,6 +365,7 @@ TEST(AddressFromSockAddr, Pipe) {
       addressFromSockAddr(ss, offsetof(struct sockaddr_un, sun_path) + 1 + strlen(sun.sun_path)),
       EnvoyException);
 }
+#endif
 
 } // namespace Address
 } // namespace Network

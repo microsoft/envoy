@@ -1,6 +1,12 @@
+#if !defined(WIN32)
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
 #include <arpa/nameser_compat.h>
+#else
+#include <winsock2.h>
+// arpa/nameser.h not present on windows, copy the header.
+#include "nameser.h"
+#endif
 
 #include <list>
 #include <memory>
@@ -123,15 +129,16 @@ private:
 
         // The response begins with the intial part of the request
         // (including the question section).
-        const size_t response_base_len = HFIXEDSZ + name_len + QFIXEDSZ;
-        unsigned char response_base[response_base_len];
-        memcpy(response_base, request, response_base_len);
-        DNS_HEADER_SET_QR(response_base, 1);
-        DNS_HEADER_SET_AA(response_base, 0);
-        DNS_HEADER_SET_RCODE(response_base, ips != nullptr ? NOERROR : NXDOMAIN);
-        DNS_HEADER_SET_ANCOUNT(response_base, ips != nullptr ? ips->size() : 0);
-        DNS_HEADER_SET_NSCOUNT(response_base, 0);
-        DNS_HEADER_SET_ARCOUNT(response_base, 0);
+        size_t response_base_len = HFIXEDSZ + name_len + QFIXEDSZ;
+        ASSERT_GE(response_base_len, 1);
+        std::vector<unsigned char> response_base(response_base_len);
+        memcpy(&response_base[0], request, response_base_len);
+        DNS_HEADER_SET_QR(&response_base[0], 1);
+        DNS_HEADER_SET_AA(&response_base[0], 0);
+        DNS_HEADER_SET_RCODE(&response_base[0], ips != nullptr ? NOERROR : NXDOMAIN);
+        DNS_HEADER_SET_ANCOUNT(&response_base[0], ips != nullptr ? ips->size() : 0);
+        DNS_HEADER_SET_NSCOUNT(&response_base[0], 0);
+        DNS_HEADER_SET_ARCOUNT(&response_base[0], 0);
 
         // Create a resource record for each IP found in the host map.
         unsigned char response_rr_fixed[RRFIXEDSZ];
@@ -157,7 +164,7 @@ private:
         const uint16_t response_size_n = htons(response_base_len + response_rest_len);
         Buffer::OwnedImpl write_buffer_;
         write_buffer_.add(&response_size_n, sizeof(response_size_n));
-        write_buffer_.add(response_base, response_base_len);
+        write_buffer_.add(&response_base[0], response_base_len);
         if (ips != nullptr) {
           for (const auto& it : *ips) {
             write_buffer_.add(question, name_len);

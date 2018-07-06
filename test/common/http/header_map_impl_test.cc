@@ -274,8 +274,8 @@ TEST(HeaderStringTest, All) {
     EXPECT_FALSE(string.caseInsensitiveContains("alive"));
     EXPECT_FALSE(string.caseInsensitiveContains("grade"));
 
-    const std::string small("close");
-    string.setCopy(small.c_str(), small.size());
+    const std::string small_string("close");
+    string.setCopy(small_string.c_str(), small_string.size());
     EXPECT_FALSE(string.caseInsensitiveContains("keep-alive"));
 
     const std::string empty("");

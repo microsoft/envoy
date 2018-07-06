@@ -1,0 +1,1 @@
+add_library(config_mocks mocks.cc)

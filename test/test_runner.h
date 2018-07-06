@@ -21,7 +21,11 @@ public:
     ::testing::Test::RecordProperty("TemporaryDirectory", TestEnvironment::temporaryDirectory());
     ::testing::Test::RecordProperty("RunfilesDirectory", TestEnvironment::runfilesDirectory());
 
-    if (::setenv("TEST_UDSDIR", TestEnvironment::unixDomainSocketDirectory().c_str(), 1) != 0) {
+#if defined(WIN32)
+    if (_putenv(("TEST_UDSDIR=" + TestEnvironment::unixDomainSocketDirectory()).c_str()) != 0) {
+#else
+    if (::setenv("TEST_UDSDIR", TestEnvironment::unixDomainSocketDirectory().c_str(), 1) != 0) {}
+#endif
       ::perror("Failed to set temporary UDS directory.");
       ::exit(1);
     }

@@ -1,7 +1,14 @@
 #include "utility.h"
 
+#if !defined(WIN32)
 #include <dirent.h>
 #include <unistd.h>
+#else
+#include <fstream>
+#include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 
 #include <cstdint>
 #include <iostream>
@@ -53,10 +60,18 @@ bool TestUtility::buffersEqual(const Buffer::Instance& lhs, const Buffer::Instan
     return false;
   }
 
+#if !defined(WIN32)
   Buffer::RawSlice lhs_slices[lhs_num_slices];
   lhs.getRawSlices(lhs_slices, lhs_num_slices);
   Buffer::RawSlice rhs_slices[rhs_num_slices];
   rhs.getRawSlices(rhs_slices, rhs_num_slices);
+#else
+  std::vector<Buffer::RawSlice> lhs_slices(lhs_num_slices);
+  lhs.getRawSlices(lhs_slices.data(), lhs_num_slices);
+  std::vector<Buffer::RawSlice> rhs_slices(rhs_num_slices);
+  rhs.getRawSlices(rhs_slices.data(), rhs_num_slices);
+#endif
+
   for (size_t i = 0; i < lhs_num_slices; i++) {
     if (lhs_slices[i].len_ != rhs_slices[i].len_) {
       return false;
@@ -73,8 +88,13 @@ bool TestUtility::buffersEqual(const Buffer::Instance& lhs, const Buffer::Instan
 std::string TestUtility::bufferToString(const Buffer::Instance& buffer) {
   std::string output;
   uint64_t num_slices = buffer.getRawSlices(nullptr, 0);
+#if !defined(WIN32)
   Buffer::RawSlice slices[num_slices];
   buffer.getRawSlices(slices, num_slices);
+#else
+  std::vector<Buffer::RawSlice> slices(num_slices);
+  buffer.getRawSlices(slices.data(), num_slices);
+#endif
   for (Buffer::RawSlice& slice : slices) {
     output.append(static_cast<const char*>(slice.mem_), slice.len_);
   }
@@ -122,6 +142,7 @@ TestUtility::makeDnsResponse(const std::list<std::string>& addresses) {
 }
 
 std::vector<std::string> TestUtility::listFiles(const std::string& path, bool recursive) {
+#if !defined(WIN32)
   DIR* dir = opendir(path.c_str());
   if (!dir) {
     throw std::runtime_error(fmt::format("Directory not found '{}'", path));
@@ -149,6 +170,14 @@ std::vector<std::string> TestUtility::listFiles(const std::string& path, bool re
 
   closedir(dir);
   return file_names;
+#else
+  std::vector<std::string> file_names;
+  for (auto& p : std::filesystem::recursive_directory_iterator(path)) {
+    if (p.is_regular_file())
+      file_names.push_back(p.path().string());
+  }
+  return file_names;
+#endif
 }
 
 envoy::api::v2::Bootstrap TestUtility::parseBootstrapFromJson(const std::string& json_string) {
@@ -191,7 +220,11 @@ void ConditionalInitializer::waitReady() {
 }
 
 ScopedFdCloser::ScopedFdCloser(int fd) : fd_(fd) {}
+#if defined(WIN32)
+ScopedFdCloser::~ScopedFdCloser() { ::closesocket(fd_); }
+#else
 ScopedFdCloser::~ScopedFdCloser() { ::close(fd_); }
+#endif
 
 namespace Http {
 

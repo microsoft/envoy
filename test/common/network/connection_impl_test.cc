@@ -160,7 +160,12 @@ public:
 protected:
   Event::DispatcherPtr dispatcher_;
   Stats::IsolatedStoreImpl stats_store_;
+#if defined(WIN32)
+  // On windows, 0.0.0.0 does not work for outbound connections. Hence default to loopback.
+  Network::TcpListenSocket socket_{Network::Test::getCanonicalLoopbackAddress(GetParam()), true};
+#else
   Network::TcpListenSocket socket_{Network::Test::getAnyAddress(GetParam()), true};
+#endif
   Network::MockListenerCallbacks listener_callbacks_;
   Network::MockConnectionHandler connection_handler_;
   Network::ListenerPtr listener_;
@@ -176,9 +181,8 @@ protected:
 INSTANTIATE_TEST_CASE_P(IpVersions, ConnectionImplTest,
                         testing::ValuesIn(TestEnvironment::getIpVersionsForTest()));
 
-TEST_P(ConnectionImplTest, CloseDuringConnectCallback) {
+TEST_P(ConnectionImplTest, CloseDuringConnectCallback) { 
   setUpBasicConnection();
-
   Buffer::OwnedImpl buffer("hello world");
   client_connection_->write(buffer);
   client_connection_->connect();
@@ -307,7 +311,7 @@ TEST_P(ConnectionImplTest, ReadDisable) {
 }
 
 TEST_P(ConnectionImplTest, EarlyCloseOnReadDisabledConnection) {
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(WIN32)
   // On our current OSX build, the client connection does not get the early
   // close notification and instead gets the close after reading the FIN.
   return;

@@ -17,8 +17,12 @@ namespace Envoy {
 namespace Json {
 
 std::vector<std::string> generateTestInputs() {
+// TODO: For Win32, run the generate_test_data.py script manually (post build) to generate the schema files.
+// Remove this ifdef once TestEnvironment::exec handles python scripts on windows.
+#if !defined(WIN32)
   TestEnvironment::exec({TestEnvironment::runfilesPath(
       "test/common/json/config_schemas_test_data/generate_test_data")});
+#endif
 
   std::string test_path = TestEnvironment::temporaryDirectory() + "/config_schemas_test";
   auto file_list = TestUtility::listFiles(test_path, false);

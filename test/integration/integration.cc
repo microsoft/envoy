@@ -76,8 +76,8 @@ void IntegrationStreamDecoder::decodeHeaders(Http::HeaderMapPtr&& headers, bool 
 void IntegrationStreamDecoder::decodeData(Buffer::Instance& data, bool end_stream) {
   saw_end_stream_ = end_stream;
   uint64_t num_slices = data.getRawSlices(nullptr, 0);
-  Buffer::RawSlice slices[num_slices];
-  data.getRawSlices(slices, num_slices);
+  std::vector<Buffer::RawSlice> slices(num_slices);
+  data.getRawSlices(&slices[0], num_slices);
   for (Buffer::RawSlice& slice : slices) {
     body_.append(static_cast<const char*>(slice.mem_), slice.len_);
   }

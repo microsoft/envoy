@@ -167,14 +167,32 @@ void ConnectionImpl::noDelay(bool enable) {
   }
 
   // Don't set NODELAY for unix domain sockets
+#if defined(WIN32)
+  // AF_UNIX is now supported on windows as well, hence keeping this logic.
+  // With sockaddr, getsockname returns 10014 for IPV6 addresses. 
+  // Use sockaddr_storage since it is sufficiently large to store address information for IPv4, IPv6, or other address families.
+  // TODO: Can use this on linux as well instead of sockaddr
+  sockaddr_storage addr;
+  socklen_t len = sizeof(addr);
+
+  int rc = getsockname(fd(), (struct sockaddr *)&addr, &len);
+  RELEASE_ASSERT(rc == 0);
+
+  if (addr.ss_family == AF_UNIX) {
+    return;
+  }
+#else
+  // Don't set NODELAY for unix domain sockets
   sockaddr addr;
   socklen_t len = sizeof(addr);
+
   int rc = getsockname(fd(), &addr, &len);
   RELEASE_ASSERT(rc == 0);
 
   if (addr.sa_family == AF_UNIX) {
     return;
   }
+#endif
 
   // Set NODELAY
   int new_value = enable;

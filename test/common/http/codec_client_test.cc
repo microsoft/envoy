@@ -249,7 +249,12 @@ protected:
   Network::MockConnectionHandler connection_handler_;
   Network::Address::InstanceConstSharedPtr source_address_;
   Stats::IsolatedStoreImpl stats_store_;
+#if defined(WIN32)
+  // On windows, 0.0.0.0 does not work for outbound connections. Hence default to loopback.
+  Network::TcpListenSocket socket_{Network::Test::getCanonicalLoopbackAddress(GetParam()), true};
+#else
   Network::TcpListenSocket socket_{Network::Test::getAnyAddress(GetParam()), true};
+#endif
   Http::MockClientConnection* codec_;
   std::unique_ptr<CodecClientForTest> client_;
   std::shared_ptr<Upstream::MockClusterInfo> cluster_{new NiceMock<Upstream::MockClusterInfo>()};

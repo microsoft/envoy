@@ -45,7 +45,7 @@ bool directoryExists(const std::string& path);
  * @return full file content as a string.
  * Be aware, this is not most highly performing file reading method.
  */
-std::string fileReadToEnd(const std::string& path);
+std::string fileReadToEnd(const std::string& path, std::ios_base::openmode mode = std::ios_base::in);
 
 /**
  * This is a file implementation geared for writing out access logs. It turn out that in certain

@@ -24,6 +24,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#if defined(WIN32)
+#define timegm _mkgmtime
+#endif
+
 using testing::NiceMock;
 using testing::Return;
 using testing::SaveArg;

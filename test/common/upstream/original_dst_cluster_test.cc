@@ -164,6 +164,7 @@ TEST_F(OriginalDstClusterTest, NoContext) {
     EXPECT_EQ(host, nullptr);
   }
 
+#if !defined(WIN32)
   // No host for non-IP address
   {
     NiceMock<Network::MockConnection> connection;
@@ -176,6 +177,8 @@ TEST_F(OriginalDstClusterTest, NoContext) {
     HostConstSharedPtr host = lb.chooseHost(&lb_context);
     EXPECT_EQ(host, nullptr);
   }
+#endif
+
 }
 
 TEST_F(OriginalDstClusterTest, Membership) {

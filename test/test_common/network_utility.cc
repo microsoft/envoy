@@ -1,7 +1,11 @@
 #include "test/test_common/network_utility.h"
 
+#if defined(WIN32)
+typedef unsigned int sa_family_t;
+#else
 #include <netinet/ip.h>
 #include <sys/socket.h>
+#endif
 
 #include <cstdint>
 #include <string>
@@ -133,10 +137,18 @@ bool supportsIpVersion(const Address::IpVersion version) {
   }
   if (0 != addr->bind(fd)) {
     // Socket bind failed.
+#if defined(WIN32)
+    RELEASE_ASSERT(::closesocket(fd) == 0);
+#else
     RELEASE_ASSERT(::close(fd) == 0);
+#endif
     return false;
   }
+#if defined(WIN32)
+  RELEASE_ASSERT(::closesocket(fd) == 0);
+#else
   RELEASE_ASSERT(::close(fd) == 0);
+#endif
   return true;
 }
 
@@ -154,7 +166,11 @@ std::pair<Address::InstanceConstSharedPtr, int> bindFreeLoopbackPort(Address::Ip
   }
   const int err = errno;
   if (fd >= 0) {
-    close(fd);
+#if defined(WIN32)
+    RELEASE_ASSERT(::closesocket(fd) == 0);
+#else
+    RELEASE_ASSERT(::close(fd) == 0);
+#endif
   }
   std::string msg = fmt::format("{} failed for address {} with error: {} ({})", failing_fn,
                                 addr->asString(), strerror(err), err);

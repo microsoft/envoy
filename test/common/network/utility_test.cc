@@ -151,7 +151,9 @@ TEST(NetworkUtility, InternalAddress) {
   EXPECT_FALSE(Utility::isInternalAddress(Address::Ipv6Instance("fc00::")));
   EXPECT_FALSE(Utility::isInternalAddress(Address::Ipv6Instance("fe00::")));
 
+#if !defined(WIN32)
   EXPECT_FALSE(Utility::isInternalAddress(Address::PipeInstance("/hello")));
+#endif
 }
 
 TEST(NetworkUtility, LoopbackAddress) {
@@ -163,10 +165,14 @@ TEST(NetworkUtility, LoopbackAddress) {
     Address::Ipv4Instance address("10.0.0.1");
     EXPECT_FALSE(Utility::isLoopbackAddress(address));
   }
+
+#if !defined(WIN32)
   {
     Address::PipeInstance address("/foo");
     EXPECT_FALSE(Utility::isLoopbackAddress(address));
   }
+#endif
+
   {
     Address::Ipv6Instance address("::1");
     EXPECT_TRUE(Utility::isLoopbackAddress(address));
@@ -242,7 +248,10 @@ TEST(PortRangeListTest, Normal) {
     Utility::parsePortRangeList(port_range_str, port_range_list);
     EXPECT_TRUE(Utility::portInRangeList(makeFromPort(1), port_range_list));
     EXPECT_FALSE(Utility::portInRangeList(makeFromPort(2), port_range_list));
+// TODO-WIN: Address::PipeInstance source not ported to windows. hence disabling the tests.
+#if !defined(WIN32)
     EXPECT_FALSE(Utility::portInRangeList(Address::PipeInstance("/foo"), port_range_list));
+#endif
   }
 
   {

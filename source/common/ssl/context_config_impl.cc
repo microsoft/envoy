@@ -23,21 +23,15 @@ namespace Ssl {
 const std::string ContextConfigImpl::DEFAULT_CIPHER_SUITES =
     "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305]:"
     "[ECDHE-RSA-AES128-GCM-SHA256|ECDHE-RSA-CHACHA20-POLY1305]:"
-    "ECDHE-ECDSA-AES128-SHA256:"
-    "ECDHE-RSA-AES128-SHA256:"
     "ECDHE-ECDSA-AES128-SHA:"
     "ECDHE-RSA-AES128-SHA:"
     "AES128-GCM-SHA256:"
-    "AES128-SHA256:"
     "AES128-SHA:"
     "ECDHE-ECDSA-AES256-GCM-SHA384:"
     "ECDHE-RSA-AES256-GCM-SHA384:"
-    "ECDHE-ECDSA-AES256-SHA384:"
-    "ECDHE-RSA-AES256-SHA384:"
     "ECDHE-ECDSA-AES256-SHA:"
     "ECDHE-RSA-AES256-SHA:"
     "AES256-GCM-SHA384:"
-    "AES256-SHA256:"
     "AES256-SHA";
 
 const std::string ContextConfigImpl::DEFAULT_ECDH_CURVES = "X25519:P-256";
@@ -77,10 +71,11 @@ ContextConfigImpl::ContextConfigImpl(const envoy::api::v2::CommonTlsContext& con
 }
 
 const std::string ContextConfigImpl::readDataSource(const envoy::api::v2::DataSource& source,
-                                                    bool allow_empty) {
+                                                    bool allow_empty,
+                                                    std::ios_base::openmode mode) {
   switch (source.specifier_case()) {
   case envoy::api::v2::DataSource::kFilename:
-    return Filesystem::fileReadToEnd(source.filename());
+    return Filesystem::fileReadToEnd(source.filename(), mode);
   case envoy::api::v2::DataSource::kInlineBytes:
     return source.inline_bytes();
   case envoy::api::v2::DataSource::kInlineString:
@@ -142,7 +137,7 @@ ServerContextConfigImpl::ServerContextConfigImpl(const envoy::api::v2::Downstrea
         switch (config.session_ticket_keys_type_case()) {
         case envoy::api::v2::DownstreamTlsContext::kSessionTicketKeys:
           for (const auto& datasource : config.session_ticket_keys().keys()) {
-            validateAndAppendKey(ret, readDataSource(datasource, false));
+            validateAndAppendKey(ret, readDataSource(datasource, false, std::ios_base::binary));
           }
           break;
         case envoy::api::v2::DownstreamTlsContext::kSessionTicketKeysSdsSecretConfig:

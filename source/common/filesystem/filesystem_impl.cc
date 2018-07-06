@@ -54,10 +54,10 @@ bool directoryExists(const std::string& path) {
 #endif
 }
 
-std::string fileReadToEnd(const std::string& path) {
+std::string fileReadToEnd(const std::string& path, std::ios_base::openmode mode) {
   std::ios::sync_with_stdio(false);
 
-  std::ifstream file(path);
+  std::ifstream file(path, mode);
   if (!file) {
     throw EnvoyException(fmt::format("unable to read file: {}", path));
   }

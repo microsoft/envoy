@@ -353,6 +353,8 @@ TEST_F(ConnectionManagerUtilityTest, ExternalAddressExternalRequestDontUseRemote
   EXPECT_EQ("60.0.0.1", headers.get_("x-forwarded-for"));
 }
 
+// TODO-WIN: PipeInstance not ported to Windows, hence disabling test.
+#if !defined(WIN32)
 // Verify that if XFF is invalid we fall back to remote address, even if it is a pipe.
 TEST_F(ConnectionManagerUtilityTest, PipeAddressInvalidXFFtDontUseRemote) {
   connection_.remote_address_ = std::make_shared<Network::Address::PipeInstance>("/blah");
@@ -362,6 +364,7 @@ TEST_F(ConnectionManagerUtilityTest, PipeAddressInvalidXFFtDontUseRemote) {
   EXPECT_EQ((MutateRequestRet{"/blah", false}), callMutateRequestHeaders(headers, Protocol::Http2));
   EXPECT_FALSE(headers.has("x-envoy-external-address"));
 }
+#endif
 
 // Verify that we treat a request as external even if the direct remote is internal and XFF
 // includes only internal addresses. Note that this is legacy behavior. See the comments

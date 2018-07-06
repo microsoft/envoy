@@ -4,7 +4,10 @@
 #include "common/buffer/watermark_buffer.h"
 
 #include "gtest/gtest.h"
-
+#if defined(WIN32)
+#include <io.h>
+#include <fcntl.h>
+#endif
 namespace Envoy {
 namespace Buffer {
 namespace {
@@ -122,7 +125,11 @@ TEST_F(WatermarkBufferTest, MoveOneByte) {
 
 TEST_F(WatermarkBufferTest, WatermarkFdFunctions) {
   int pipe_fds[2] = {0, 0};
+#if defined(WIN32)
+  ASSERT_EQ(0, _pipe(pipe_fds, 256, _O_TEXT));
+#else
   ASSERT_EQ(0, pipe(pipe_fds));
+#endif
 
   buffer_.add(TEN_BYTES, 10);
   buffer_.add(TEN_BYTES, 10);

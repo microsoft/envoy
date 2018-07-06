@@ -1,6 +1,8 @@
 #include "common/filter/listener/proxy_protocol.h"
 
+#if !defined(WIN32)
 #include <unistd.h>
+#endif
 
 #include <cstdint>
 #include <memory>

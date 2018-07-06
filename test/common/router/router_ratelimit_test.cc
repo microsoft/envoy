@@ -394,6 +394,7 @@ TEST_F(RateLimitPolicyEntryTest, RemoteAddress) {
               testing::ContainerEq(descriptors_));
 }
 
+#if !defined(WIN32)
 // Verify no descriptor is emitted if remote is a pipe.
 TEST_F(RateLimitPolicyEntryTest, PipeAddress) {
   std::string json = R"EOF(
@@ -412,6 +413,7 @@ TEST_F(RateLimitPolicyEntryTest, PipeAddress) {
   rate_limit_entry_->populateDescriptors(route_, descriptors_, "", header_, pipe_address);
   EXPECT_TRUE(descriptors_.empty());
 }
+#endif
 
 TEST_F(RateLimitPolicyEntryTest, SourceService) {
   std::string json = R"EOF(

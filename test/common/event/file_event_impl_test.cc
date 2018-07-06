@@ -9,13 +9,21 @@
 
 #include "gtest/gtest.h"
 
+#if defined(WIN32)
+#include "socketpair.h"
+#endif
+
 namespace Envoy {
 namespace Event {
 
 class FileEventImplTest : public testing::Test {
 public:
   void SetUp() override {
+#if defined(WIN32)
     int rc = socketpair(AF_UNIX, SOCK_DGRAM, 0, fds_);
+#else
+    int rc = socketpair(AF_UNIX, SOCK_DGRAM, 0, fds_);
+#endif
     ASSERT_EQ(0, rc);
     int data = 1;
     rc = write(fds_[1], &data, sizeof(data));
