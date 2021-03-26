@@ -1,3 +1,8 @@
+# Deprecation Warning
+
+**This repository is no longer maintained. Please use the [official envoy repository](https://github.com/envoyproxy/envoy)**
+
+---
 ![Envoy Logo](https://github.com/envoyproxy/artwork/blob/master/PNG/Envoy_Logo_Final_PANTONE.png)
 
 [C++ L7 proxy and communication bus](https://www.envoyproxy.io/)
